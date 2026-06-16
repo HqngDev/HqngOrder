@@ -17,15 +17,45 @@
 
 package tech.qhuyy.hqngOrder
 
+import com.tcoded.folialib.FoliaLib
 import org.bukkit.plugin.java.JavaPlugin
+import tech.qhuyy.hqngOrder.model.Software
 
 class HqngOrder : JavaPlugin() {
+    lateinit var foliaLib: FoliaLib private set
+    lateinit var software: Software private set
 
     override fun onEnable() {
-        // Plugin startup logic
+        // Server Software
+        foliaLib = FoliaLib(this)
+        detectingServerSoftware()
+        checkingIfSpigot()
+
+        logSchedulingStatus()
     }
 
     override fun onDisable() {
         // Plugin shutdown logic
+    }
+
+    private fun detectingServerSoftware() { software = Software.detectServerSoftware(foliaLib) }
+    private fun checkingIfSpigot() {
+        if (software == Software.SPIGOT || software == Software.UNKNOWN) {
+            logger.severe("═══════════════════════════════════════════════════════════════")
+            logger.severe("HqngOrder requires Paper or Folia to run ( including forks ).")
+            logger.severe("Spigot, non-bukkit and other server software are not supported.")
+            logger.severe("Please upgrade to Paper: https://papermc.io/downloads/paper")
+            logger.severe("═══════════════════════════════════════════════════════════════")
+            server.pluginManager.disablePlugin(this)
+            return
+        }
+    }
+
+    private fun logSchedulingStatus() {
+        if (software == Software.PAPER) {
+            logger.info("Running on Folia - region-safe scheduling enabled")
+        } else {
+            logger.info("Running on Paper - standard scheduling enabled")
+        }
     }
 }
