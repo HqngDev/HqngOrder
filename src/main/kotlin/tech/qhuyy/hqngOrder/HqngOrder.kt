@@ -19,11 +19,15 @@ package tech.qhuyy.hqngOrder
 
 import com.tcoded.folialib.FoliaLib
 import org.bukkit.plugin.java.JavaPlugin
+import tech.qhuyy.hqngOrder.config.ConfigManager
+import tech.qhuyy.hqngOrder.database.DatabaseManager
 import tech.qhuyy.hqngOrder.model.Software
 
 class HqngOrder : JavaPlugin() {
     lateinit var foliaLib: FoliaLib private set
     lateinit var software: Software private set
+    lateinit var configManager: ConfigManager private set
+    lateinit var databaseManager: DatabaseManager private set
 
     override fun onEnable() {
         // Server Software
@@ -32,10 +36,14 @@ class HqngOrder : JavaPlugin() {
         checkingIfSpigot()
 
         logSchedulingStatus()
+
+        // Config → Database
+        configManager = ConfigManager(this).also { it.init() }
+        databaseManager = DatabaseManager(this, configManager).also { it.init() }
     }
 
     override fun onDisable() {
-        // Plugin shutdown logic
+        if (::databaseManager.isInitialized) databaseManager.close()
     }
 
     private fun detectingServerSoftware() { software = Software.detectServerSoftware(foliaLib) }
