@@ -19,13 +19,16 @@ package tech.qhuyy.hqngOrder
 
 import com.tcoded.folialib.FoliaLib
 import org.bukkit.plugin.java.JavaPlugin
+import tech.qhuyy.hqngOrder.command.TempCommand
 import tech.qhuyy.hqngOrder.config.ConfigManager
 import tech.qhuyy.hqngOrder.database.DatabaseManager
 import tech.qhuyy.hqngOrder.model.Software
+import tech.qhuyy.hqngOrder.utils.PluginBuildInfo
 
 class HqngOrder : JavaPlugin() {
     lateinit var foliaLib: FoliaLib private set
     lateinit var software: Software private set
+    lateinit var pluginBuildInfo: PluginBuildInfo private set
     lateinit var configManager: ConfigManager private set
     lateinit var databaseManager: DatabaseManager private set
 
@@ -35,11 +38,13 @@ class HqngOrder : JavaPlugin() {
         detectingServerSoftware()
         checkingIfSpigot()
 
+        pluginBuildInfo = PluginBuildInfo(this)
         logSchedulingStatus()
 
         // Config → Database
         configManager = ConfigManager(this).also { it.init() }
         databaseManager = DatabaseManager(this, configManager).also { it.init() }
+        server.getPluginCommand("otemp")?.setExecutor(TempCommand(this))
     }
 
     override fun onDisable() {

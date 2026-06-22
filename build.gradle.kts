@@ -106,22 +106,26 @@ tasks {
     }
 
     processResources {
-        val props = mapOf("version" to version)
+        dependsOn(generateGitProperties)
+        val props = mapOf("" +
+                "version" to version,
+                "gitCommit" to gitCommitShort
+        )
         filesMatching("plugin.yml") {
             expand(props)
         }
     }
-}
 
-tasks.register("printGitInfo") {
-    group = "help"
-    description = "Prints current git information"
-    doLast {
-        println("\n=== Git Information ===")
-        file(layout.buildDirectory.file("generated/resources/git/git.properties").get().asFile)
-            .takeIf { it.exists() }
-            ?.readLines()
-            ?.forEach { println(it) }
-            ?: println("Git properties not generated yet. Run 'build' first.")
+    register("printGitInfo") {
+        group = "help"
+        description = "Prints current git information"
+        doLast {
+            println("\n=== Git Information ===")
+            file(layout.buildDirectory.file("generated/resources/git/git.properties").get().asFile)
+                .takeIf { it.exists() }
+                ?.readLines()
+                ?.forEach { println(it) }
+                ?: println("Git properties not generated yet. Run 'build' first.")
+        }
     }
 }
