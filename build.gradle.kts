@@ -66,6 +66,9 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     compileOnly("org.slf4j:slf4j-api:2.0.9")
     compileOnly("me.clip:placeholderapi:2.12.2")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
+    compileOnly("net.milkbowl.vault:VaultUnlockedAPI:2.3")
+    implementation("dev.triumphteam:triumph-gui:3.1.13")
     implementation("com.mysql:mysql-connector-j:9.7.0")
     implementation("com.tcoded:FoliaLib:0.5.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -84,6 +87,7 @@ tasks.shadowJar {
     relocate("com.mysql", "$packageLib.mysql")
     relocate("com.tcoded", "$packageLib.tcoded")
     relocate("com.zaxxer", "$packageLib.zaxxer")
+    relocate("dev.triumphteam.gui", "tech.qhuyy.hqngOrder.gui")
     relocate("kotlin", "$packageLib.kotlin") {
         exclude("kotlin/kotlin.kotlin_builtins")
         exclude("kotlin/reflect/reflect.kotlin_builtins")
