@@ -4,6 +4,9 @@
 # Gradle cache folder
 .gradle
 
+# Local folder
+.local
+
 # Gradle build folder
 build
 

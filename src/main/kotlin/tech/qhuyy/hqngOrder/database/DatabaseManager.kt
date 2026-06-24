@@ -172,14 +172,14 @@ class DatabaseManager(
                 val meta = conn.metaData
 
                 // Check both lowercase and uppercase table names (cross-DB compatibility)
-                val hasCurrencyColumn = meta.getColumns(null, null, "sb_orders", "currency").use { it.next() }
-                    || meta.getColumns(null, null, "SB_ORDERS", "currency").use { it.next() }
+                val hasCurrencyColumn = meta.getColumns(null, null, "hqng_orders", "currency").use { it.next() }
+                    || meta.getColumns(null, null, "hqng_ORDERS", "currency").use { it.next() }
 
                 if (!hasCurrencyColumn) {
-                    plugin.logger.info("Migration: adding 'currency' column to sb_orders...")
+                    plugin.logger.info("Migration: adding 'currency' column to hqng_orders...")
                     try {
                         conn.createStatement().use {
-                            it.execute("ALTER TABLE sb_orders ADD COLUMN currency VARCHAR(20) NOT NULL DEFAULT 'MONEY'")
+                            it.execute("ALTER TABLE hqng_orders ADD COLUMN currency VARCHAR(20) NOT NULL DEFAULT 'MONEY'")
                         }
                         plugin.logger.info("Migration: 'currency' column added successfully")
                     } catch (e: SQLException) {
@@ -207,7 +207,7 @@ class DatabaseManager(
      */
     fun createOrder(order: BuyOrder): Int {
         val sql = """
-            INSERT INTO sb_orders
+            INSERT INTO hqng_orders
                 (buyer_uuid, buyer_name, item_serialized, amount_needed, amount_fulfilled,
                  price_per_item, currency, created_at, expiry_time, status, locked_by, lock_time)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -247,7 +247,7 @@ class DatabaseManager(
      */
     fun updateOrder(order: BuyOrder) {
         val sql = """
-            UPDATE sb_orders
+            UPDATE hqng_orders
             SET amount_fulfilled = ?, status = ?, locked_by = ?, lock_time = ?
             WHERE id = ?
         """.trimIndent()
@@ -281,7 +281,7 @@ class DatabaseManager(
     fun loadActiveOrders(): List<BuyOrder> {
         return try {
             pool.connection.use { conn ->
-                conn.prepareStatement("SELECT * FROM sb_orders WHERE status = ?").use { ps ->
+                conn.prepareStatement("SELECT * FROM hqng_orders WHERE status = ?").use { ps ->
                     ps.setString(1, OrderStatus.PENDING.name)
                     ps.executeQuery().use { rs ->
                         buildList {
@@ -308,7 +308,7 @@ class DatabaseManager(
     fun loadOrder(orderId: Int): BuyOrder? {
         return try {
             pool.connection.use { conn ->
-                conn.prepareStatement("SELECT * FROM sb_orders WHERE id = ?").use { ps ->
+                conn.prepareStatement("SELECT * FROM hqng_orders WHERE id = ?").use { ps ->
                     ps.setInt(1, orderId)
                     ps.executeQuery().use { rs ->
                         if (rs.next()) rs.toBuyOrder(plugin) else null
@@ -333,7 +333,7 @@ class DatabaseManager(
     fun loadStash(playerUuid: UUID): Array<ItemStack?> {
         return try {
             pool.connection.use { conn ->
-                conn.prepareStatement("SELECT stash_serialized FROM sb_order_stash WHERE player_uuid = ?").use { ps ->
+                conn.prepareStatement("SELECT stash_serialized FROM hqng_order_stash WHERE player_uuid = ?").use { ps ->
                     ps.setString(1, playerUuid.toString())
                     ps.executeQuery().use { rs ->
                         if (rs.next()) {
@@ -384,7 +384,7 @@ class DatabaseManager(
      */
     fun logTransaction(orderId: Int, playerUuid: UUID, action: String, amount: Int, details: String?) {
         val sql = """
-            INSERT INTO sb_order_logs (order_id, player_uuid, action, amount, details, timestamp)
+            INSERT INTO hqng_order_logs (order_id, player_uuid, action, amount, details, timestamp)
             VALUES (?, ?, ?, ?, ?, ?)
         """.trimIndent()
 
@@ -413,7 +413,7 @@ class DatabaseManager(
     fun loadLogs(limit: Int): List<LogEntry> {
         return try {
             pool.connection.use { conn ->
-                conn.prepareStatement("SELECT * FROM sb_order_logs ORDER BY timestamp DESC LIMIT ?").use { ps ->
+                conn.prepareStatement("SELECT * FROM hqng_order_logs ORDER BY timestamp DESC LIMIT ?").use { ps ->
                     ps.setInt(1, limit)
                     ps.executeQuery().use { rs ->
                         buildList {
@@ -653,7 +653,7 @@ private enum class SqlDialect(
     MYSQL(
         displayName = "MySQL",
         sqlCreateOrdersTable = """
-            CREATE TABLE IF NOT EXISTS sb_orders (
+            CREATE TABLE IF NOT EXISTS hqng_orders (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 buyer_uuid VARCHAR(36) NOT NULL,
                 buyer_name VARCHAR(16) NOT NULL,
@@ -670,13 +670,13 @@ private enum class SqlDialect(
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """.trimIndent(),
         sqlCreateStashTable = """
-            CREATE TABLE IF NOT EXISTS sb_order_stash (
+            CREATE TABLE IF NOT EXISTS hqng_order_stash (
                 player_uuid VARCHAR(36) PRIMARY KEY,
                 stash_serialized TEXT NOT NULL
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """.trimIndent(),
         sqlCreateLogsTable = """
-            CREATE TABLE IF NOT EXISTS sb_order_logs (
+            CREATE TABLE IF NOT EXISTS hqng_order_logs (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 order_id INT NOT NULL,
                 player_uuid VARCHAR(36) NOT NULL,
@@ -687,7 +687,7 @@ private enum class SqlDialect(
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
         """.trimIndent(),
         sqlUpsertStash = """
-            INSERT INTO sb_order_stash (player_uuid, stash_serialized)
+            INSERT INTO hqng_order_stash (player_uuid, stash_serialized)
             VALUES (?, ?)
             ON DUPLICATE KEY UPDATE stash_serialized = ?
         """.trimIndent()
@@ -695,7 +695,7 @@ private enum class SqlDialect(
     SQLITE(
         displayName = "SQLite",
         sqlCreateOrdersTable = """
-            CREATE TABLE IF NOT EXISTS sb_orders (
+            CREATE TABLE IF NOT EXISTS hqng_orders (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 buyer_uuid VARCHAR(36) NOT NULL,
                 buyer_name VARCHAR(16) NOT NULL,
@@ -712,13 +712,13 @@ private enum class SqlDialect(
             )
         """.trimIndent(),
         sqlCreateStashTable = """
-            CREATE TABLE IF NOT EXISTS sb_order_stash (
+            CREATE TABLE IF NOT EXISTS hqng_order_stash (
                 player_uuid VARCHAR(36) PRIMARY KEY,
                 stash_serialized TEXT NOT NULL
             )
         """.trimIndent(),
         sqlCreateLogsTable = """
-            CREATE TABLE IF NOT EXISTS sb_order_logs (
+            CREATE TABLE IF NOT EXISTS hqng_order_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 order_id INTEGER NOT NULL,
                 player_uuid VARCHAR(36) NOT NULL,
@@ -729,7 +729,7 @@ private enum class SqlDialect(
             )
         """.trimIndent(),
         sqlUpsertStash = """
-            INSERT OR REPLACE INTO sb_order_stash (player_uuid, stash_serialized)
+            INSERT OR REPLACE INTO hqng_order_stash (player_uuid, stash_serialized)
             VALUES (?, ?)
         """.trimIndent()
     )
